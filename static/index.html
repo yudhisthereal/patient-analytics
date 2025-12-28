@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>MaixCAM Analytics Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>📹 MaixCAM Analytics Dashboard</h1>
+
+    <div class="control-panel">
+        <div class="control-group">
+            <label><input type="checkbox" id="toggleRecord"> Record</label>
+            <label><input type="checkbox" id="toggleRaw"> Show Raw</label>
+            <label><input type="checkbox" id="autoUpdateBg"> Auto-update BG</label>
+        </div>
+        <div class="control-group">
+            <label><input type="checkbox" id="showSafeArea"> Show Safe Areas</label>
+            <label><input type="checkbox" id="useSafetyCheck" checked> Use Safety Check</label>
+        </div>
+        <div class="control-group">
+            <label>Fall Algorithm:
+                <select id="fallAlgorithmSelect">
+                    <option value="1">Method 1: BBox Only</option>
+                    <option value="2" selected>Method 2: Flexible Pose</option>
+                    <option value="3">Method 3: Conservative</option>
+                </select>
+            </label>
+            <button id="setBackgroundBtn" title="Set current frame as background">📸 Set BG</button>
+            <button id="editSafeAreaBtn" title="Edit safety zones">🛡️ Safe Areas</button>
+        </div>
+    </div>
+
+    <div class="algorithm-info" id="algorithmInfo" style="display: none;">
+        <h3>📊 Fall Detection Algorithms</h3>
+        <div class="algorithm-cards">
+            <div class="card" data-algorithm="1">
+                <h4>Method 1: BBox Motion Only</h4>
+                <p>Uses only bounding box motion detection. Fastest but may have false positives.</p>
+                <div class="stats">Speed: ⚡⚡⚡⚡⚡ | Accuracy: ⚡⚡⚡○○</div>
+            </div>
+            <div class="card" data-algorithm="2">
+                <h4>Method 2: BBox+Pose AND</h4>
+                <p>Combines motion with pose conditions. Requires both motion and pose criteria.</p>
+                <div class="stats">Speed: ⚡⚡⚡⚡○ | Accuracy: ⚡⚡⚡⚡○</div>
+            </div>
+            <div class="card" data-algorithm="3" data-active="true">
+                <h4>Method 3: Flexible Verification</h4>
+                <p>Most conservative approach. Requires lying down pose verification.</p>
+                <div class="stats">Speed: ⚡⚡⚡○○ | Accuracy: ⚡⚡⚡⚡⚡</div>
+            </div>
+        </div>
+        <button id="closeInfoBtn" class="info-btn">✕ Close</button>
+    </div>
+    
+    <button id="showInfoBtn" class="info-btn">ℹ️ Algorithm Info</button>
+
+    <img id="stream" src="/stream.mjpg" alt="Live Stream" />
+
+    <!-- Background Confirmation Popup -->
+    <div id="popup" class="popup">
+        <h3>Set this frame as background?</h3>
+        <img id="preview" src="">
+        <br />
+        <button onclick="confirmBackground()">Yes</button>
+        <button onclick="hidePopup()">Cancel</button>
+    </div>
+
+    <!-- Safe Area Editor Popup -->
+    <div id="safeAreaPopup" class="popup">
+        <h3>🛡️ Edit Safe Areas</h3>
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <ul>
+                <li>Click on the image to add points to the polygon</li>
+                <li>Click near the first point to close the polygon</li>
+                <li>Right-click to remove the last point</li>
+                <li>Press 'Save' when done</li>
+            </ul>
+        </div>
+        <div class="canvas-container">
+            <canvas id="safeAreaCanvas"></canvas>
+        </div>
+        <div class="toolbar">
+            <button id="newPolygonBtn">New Polygon</button>
+            <button id="clearAllBtn">Clear All</button>
+            <button id="saveSafeAreasBtn">💾 Save</button>
+            <button onclick="hideSafeAreaPopup()">Cancel</button>
+        </div>
+        <div id="saveStatus" class="status"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Algorithm info panel toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const infoPanel = document.getElementById('algorithmInfo');
+            const closeBtn = document.getElementById('closeInfoBtn');
+            const showBtn = document.getElementById('showInfoBtn');
+            const algorithmSelect = document.getElementById('fallAlgorithmSelect');
+            const algorithmCards = document.querySelectorAll('.card');
+            
+            // Show info panel
+            if (showBtn) {
+                showBtn.addEventListener('click', () => {
+                    infoPanel.style.display = 'block';
+                    showBtn.style.display = 'none';
+                });
+            }
+            
+            // Hide info panel
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    infoPanel.style.display = 'none';
+                    if (showBtn) showBtn.style.display = 'inline-block';
+                });
+            }
+            
+            // Update active card when dropdown changes
+            if (algorithmSelect) {
+                algorithmSelect.addEventListener('change', (e) => {
+                    updateAlgorithmSelection(e.target.value, true);
+                });
+            }
+            
+            // Click on card to select algorithm
+            algorithmCards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const algorithm = card.dataset.algorithm;
+                    updateAlgorithmSelection(algorithm, true);
+                });
+            });
+            
+            // Initialize from current camera state
+            setTimeout(() => {
+                if (window.fetchCameraState && window.currentCameraId) {
+                    window.fetchCameraState(window.currentCameraId).then(flags => {
+                        if (flags && flags.fall_algorithm !== undefined) {
+                            updateAlgorithmSelection(flags.fall_algorithm, false);
+                        }
+                    });
+                }
+            }, 1000);
+        });
+        
+        // Make this function available globally
+        window.updateAlgorithmSelection = updateAlgorithmSelection;
+    </script>
+    <div id="registrationPopup" class="popup">
+        <h3>New Camera Registration</h3>
+        <div id="registrationList">
+            <!-- Pending registrations will appear here -->
+        </div>
+        <div id="registrationForm" style="display: none;">
+            <p>Camera IP Address: <strong id="regCameraIP"></strong></p>
+            <label>
+                Camera Name:
+                <input type="text" id="cameraNameInput" 
+                    placeholder="Enter a descriptive name (e.g., Living Room Camera)">
+            </label>
+            <div class="registration-buttons">
+                <button onclick="approveRegistration()">Approve & Register</button>
+                <button onclick="hideRegistrationPopup()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
