@@ -460,7 +460,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             query_params = parse_qs(parsed_path.query)
             
             # Default camera ID
-            camera_id = query_params.get('camera_id', ['maixcam_001'])[0]
+            camera_id = query_params.get('camera_id', ['maixcam_000'])[0]
             
             # Log the request for debugging
             logger.debug(f"GET {path} - Camera: {camera_id}")
@@ -800,7 +800,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
     def handle_frame_upload(self, body):
         """Handle frame upload from MaixCAM"""
         try:
-            camera_id = self.headers.get('X-Camera-ID', 'maixcam_001')
+            camera_id = self.headers.get('X-Camera-ID', 'maixcam_000')
             
             # Validate frame size
             if len(body) > 10 * 1024 * 1024:  # 10MB max
@@ -844,7 +844,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             command_data = json.loads(body.decode())
             command = command_data.get("command")
             value = command_data.get("value")
-            camera_id = command_data.get("camera_id", "maixcam_001")
+            camera_id = command_data.get("camera_id", "maixcam_000")
             
             logger.info(f"Command received: {command}={value} for {camera_id}")
             
@@ -1053,7 +1053,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
         """Set safe areas for camera"""
         try:
             data = json.loads(body.decode())
-            camera_id = data.get("camera_id", "maixcam_001")
+            camera_id = data.get("camera_id", "maixcam_000")
             safe_areas = data.get("safe_areas", [])
             
             if camera_id not in self.analytics.camera_states:

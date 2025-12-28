@@ -3,61 +3,108 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MaixCAM Analytics Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <h1>📹 MaixCAM Analytics Dashboard</h1>
-
-    <div class="control-panel">
-        <div class="control-group">
-            <label><input type="checkbox" id="toggleRecord"> Record</label>
-            <label><input type="checkbox" id="toggleRaw"> Show Raw</label>
-            <label><input type="checkbox" id="autoUpdateBg"> Auto-update BG</label>
-        </div>
-        <div class="control-group">
-            <label><input type="checkbox" id="showSafeArea"> Show Safe Areas</label>
-            <label><input type="checkbox" id="useSafetyCheck" checked> Use Safety Check</label>
-        </div>
-        <div class="control-group">
-            <label>Fall Algorithm:
-                <select id="fallAlgorithmSelect">
-                    <option value="1">Method 1: BBox Only</option>
-                    <option value="2" selected>Method 2: Flexible Pose</option>
-                    <option value="3">Method 3: Conservative</option>
-                </select>
-            </label>
-            <button id="setBackgroundBtn" title="Set current frame as background">📸 Set BG</button>
-            <button id="editSafeAreaBtn" title="Edit safety zones">🛡️ Safe Areas</button>
-        </div>
-    </div>
-
-    <div class="algorithm-info" id="algorithmInfo" style="display: none;">
-        <h3>📊 Fall Detection Algorithms</h3>
-        <div class="algorithm-cards">
-            <div class="card" data-algorithm="1">
-                <h4>Method 1: BBox Motion Only</h4>
-                <p>Uses only bounding box motion detection. Fastest but may have false positives.</p>
-                <div class="stats">Speed: ⚡⚡⚡⚡⚡ | Accuracy: ⚡⚡⚡○○</div>
-            </div>
-            <div class="card" data-algorithm="2">
-                <h4>Method 2: BBox+Pose AND</h4>
-                <p>Combines motion with pose conditions. Requires both motion and pose criteria.</p>
-                <div class="stats">Speed: ⚡⚡⚡⚡○ | Accuracy: ⚡⚡⚡⚡○</div>
-            </div>
-            <div class="card" data-algorithm="3" data-active="true">
-                <h4>Method 3: Flexible Verification</h4>
-                <p>Most conservative approach. Requires lying down pose verification.</p>
-                <div class="stats">Speed: ⚡⚡⚡○○ | Accuracy: ⚡⚡⚡⚡⚡</div>
-            </div>
-        </div>
-        <button id="closeInfoBtn" class="info-btn">✕ Close</button>
-    </div>
     
+    <!-- Main container for layout reordering -->
+    <div class="main-container">
+        
+        <!-- Stream comes first after title -->
+        <img id="stream" src="/stream.mjpg" alt="Live Stream" />
+
+        <!-- Camera Controls -->
+        <div id="cameraControls" class="camera-controls">
+            <label class="camera-label">📷 Camera:</label>
+            <select id="cameraSelect">
+                <option value="maixcam_000">Camera 0</option>
+            </select>
+            <button id="refreshCamerasBtn">🔄 Refresh List</button>
+            <span id="camera-info" class="camera-info">Loading...</span>
+        </div>
+
+        <!-- Status Panel -->
+        <div id="statusPanel" class="status-panel">
+            <div class="status-grid">
+                <div class="status-item">
+                    <strong>Server Status:</strong>
+                    <span id="serverStatus">Connecting...</span>
+                </div>
+                <div class="status-item">
+                    <strong>Camera Status:</strong>
+                    <span id="cameraStatus">Unknown</span>
+                </div>
+                <div class="status-item">
+                    <strong>Active Camera:</strong>
+                    <span id="connectedCamera">maixcam_000</span>
+                </div>
+                <div class="status-item">
+                    <strong>Last Frame:</strong>
+                    <span id="lastUpdate">Never</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-group">
+                <label><input type="checkbox" id="toggleRecord"> Record</label>
+                <label><input type="checkbox" id="toggleRaw"> Show Raw</label>
+                <label><input type="checkbox" id="autoUpdateBg"> Auto-update BG</label>
+            </div>
+            <div class="control-group">
+                <label><input type="checkbox" id="showSafeArea"> Show Safe Areas</label>
+                <label><input type="checkbox" id="useSafetyCheck" checked> Use Safety Check</label>
+            </div>
+            <div class="control-group">
+                <label>Fall Algorithm:
+                    <select id="fallAlgorithmSelect">
+                        <option value="1">Method 1: BBox Only</option>
+                        <option value="2" selected>Method 2: Flexible Pose</option>
+                        <option value="3">Method 3: Conservative</option>
+                    </select>
+                </label>
+                <button id="setBackgroundBtn" title="Set current frame as background">📸 Set BG</button>
+                <button id="editSafeAreaBtn" title="Edit safety zones">🛡️ Safe Areas</button>
+            </div>
+        </div>
+
+        <!-- Algorithm Info (hidden by default) -->
+        <div class="algorithm-info" id="algorithmInfo" style="display: none;">
+            <h3>📊 Fall Detection Algorithms</h3>
+            <div class="algorithm-cards">
+                <div class="card" data-algorithm="1">
+                    <h4>Method 1: BBox Motion Only</h4>
+                    <p>Uses only bounding box motion detection. Fastest but may have false positives.</p>
+                    <div class="stats">Speed: ⚡⚡⚡⚡⚡ | Accuracy: ⚡⚡⚡○○</div>
+                </div>
+                <div class="card" data-algorithm="2">
+                    <h4>Method 2: BBox+Pose AND</h4>
+                    <p>Combines motion with pose conditions. Requires both motion and pose criteria.</p>
+                    <div class="stats">Speed: ⚡⚡⚡⚡○ | Accuracy: ⚡⚡⚡⚡○</div>
+                </div>
+                <div class="card" data-algorithm="3" data-active="true">
+                    <h4>Method 3: Flexible Verification</h4>
+                    <p>Most conservative approach. Requires lying down pose verification.</p>
+                    <div class="stats">Speed: ⚡⚡⚡○○ | Accuracy: ⚡⚡⚡⚡⚡</div>
+                </div>
+            </div>
+            <button id="closeInfoBtn" class="info-btn">✕ Close</button>
+        </div>
+        
+    </div> <!-- End of .main-container -->
+    
+    <!-- Floating button for algorithm info -->
     <button id="showInfoBtn" class="info-btn">ℹ️ Algorithm Info</button>
 
-    <img id="stream" src="/stream.mjpg" alt="Live Stream" />
+    <!-- Status Indicator -->
+    <div id="stream-status" class="status-indicator">
+        Camera: maixcam_000
+    </div>
 
     <!-- Background Confirmation Popup -->
     <div id="popup" class="popup">
@@ -148,24 +195,6 @@
         // Make this function available globally
         window.updateAlgorithmSelection = updateAlgorithmSelection;
     </script>
-    <div id="registrationPopup" class="popup">
-        <h3>New Camera Registration</h3>
-        <div id="registrationList">
-            <!-- Pending registrations will appear here -->
-        </div>
-        <div id="registrationForm" style="display: none;">
-            <p>Camera IP Address: <strong id="regCameraIP"></strong></p>
-            <label>
-                Camera Name:
-                <input type="text" id="cameraNameInput" 
-                    placeholder="Enter a descriptive name (e.g., Living Room Camera)">
-            </label>
-            <div class="registration-buttons">
-                <button onclick="approveRegistration()">Approve & Register</button>
-                <button onclick="hideRegistrationPopup()">Cancel</button>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>

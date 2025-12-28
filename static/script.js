@@ -34,7 +34,7 @@ let originalImageHeight = 0;
 let canvasScale = 1;
 
 // Camera selection
-let currentCameraId = "maixcam_001";
+let currentCameraId = "maixcam_000";
 
 // Analytics server URL (current server)
 let ANALYTICS_HTTP_URL = window.location.origin;
@@ -57,168 +57,14 @@ let availableCameras = [];
 let cameraConnectionStatus = {};
 
 // Status elements (will be created dynamically)
-let statusIndicator = null;
-let cameraSelect = null;
-let cameraInfoSpan = null;
-let refreshCamerasBtn = null;
+let statusIndicator = document.getElementById('stream-status');
+let cameraSelect = document.getElementById('cameraSelect');
+let cameraInfoSpan = document.getElementById('camera-info');
+let refreshCamerasBtn = document.getElementById('refreshCamerasBtn');
 
 // Camera registration state
 let pendingRegistrations = [];
 let selectedTempId = null;
-
-// ============================================
-// UI SETUP - CREATE DYNAMIC ELEMENTS
-// ============================================
-
-function setupDynamicUI() {
-    // Create camera selection container
-    const cameraContainer = document.createElement('div');
-    cameraContainer.id = 'cameraControls';
-    cameraContainer.style.cssText = `
-        margin: 15px 0;
-        padding: 10px;
-        background: #f5f5f5;
-        border-radius: 5px;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    `;
-    
-    // Create camera select
-    const cameraLabel = document.createElement('label');
-    cameraLabel.textContent = '📷 Camera: ';
-    cameraLabel.style.cssText = 'font-weight: bold; margin-right: 5px;';
-    
-    cameraSelect = document.createElement('select');
-    cameraSelect.id = 'cameraSelect';
-    cameraSelect.style.cssText = 'padding: 5px 10px; border-radius: 4px; border: 1px solid #ccc;';
-    cameraSelect.innerHTML = '<option value="maixcam_001">Camera 1</option>';
-    
-    refreshCamerasBtn = document.createElement('button');
-    refreshCamerasBtn.textContent = '🔄 Refresh List';
-    refreshCamerasBtn.style.cssText = 'padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;';
-    refreshCamerasBtn.onclick = loadCameraList;
-    
-    cameraInfoSpan = document.createElement('span');
-    cameraInfoSpan.id = 'camera-info';
-    cameraInfoSpan.style.cssText = 'font-size: 13px; color: #666; margin-left: 10px;';
-    cameraInfoSpan.textContent = 'Loading...';
-    
-    cameraContainer.appendChild(cameraLabel);
-    cameraContainer.appendChild(cameraSelect);
-    cameraContainer.appendChild(refreshCamerasBtn);
-    cameraContainer.appendChild(cameraInfoSpan);
-    
-    // Create status indicator
-    statusIndicator = document.createElement('div');
-    statusIndicator.id = 'stream-status';
-    statusIndicator.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        padding: 8px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        z-index: 1000;
-        background: #777;
-        color: white;
-        font-weight: bold;
-        min-width: 160px;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    `;
-    statusIndicator.textContent = `Camera: ${currentCameraId}`;
-    
-    // Create status panel
-    const statusPanel = document.createElement('div');
-    statusPanel.id = 'statusPanel';
-    statusPanel.style.cssText = `
-        margin: 15px 0;
-        padding: 12px;
-        background: #e9ecef;
-        border-radius: 5px;
-        border: 1px solid #dee2e6;
-        font-size: 13px;
-    `;
-    
-    const statusGrid = document.createElement('div');
-    statusGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;';
-    
-    const statusItems = [
-        { id: 'serverStatus', label: 'Server Status', value: 'Connecting...' },
-        { id: 'cameraStatus', label: 'Camera Status', value: 'Unknown' },
-        { id: 'connectedCamera', label: 'Active Camera', value: currentCameraId },
-        { id: 'lastUpdate', label: 'Last Frame', value: 'Never' }
-    ];
-    
-    statusItems.forEach(item => {
-        const statusItem = document.createElement('div');
-        const label = document.createElement('strong');
-        label.textContent = `${item.label}: `;
-        label.style.marginRight = '5px';
-        
-        const value = document.createElement('span');
-        value.id = item.id;
-        value.textContent = item.value;
-        
-        statusItem.appendChild(label);
-        statusItem.appendChild(value);
-        statusGrid.appendChild(statusItem);
-    });
-    
-    statusPanel.appendChild(statusGrid);
-    
-    // Insert elements into DOM
-    const h1 = document.querySelector('h1');
-    if (h1 && h1.nextSibling) {
-        h1.parentNode.insertBefore(cameraContainer, h1.nextSibling);
-        cameraContainer.parentNode.insertBefore(statusPanel, cameraContainer.nextSibling);
-    } else {
-        document.body.insertBefore(cameraContainer, document.body.firstChild);
-        document.body.insertBefore(statusPanel, cameraContainer.nextSibling);
-    }
-    
-    document.body.appendChild(statusIndicator);
-    
-    // Set up camera select event
-    cameraSelect.onchange = () => {
-        currentCameraId = cameraSelect.value;
-        console.log(`Switched to camera: ${currentCameraId}`);
-        
-        // Check connection status for this camera
-        const cameraInfo = availableCameras.find(cam => cam.camera_id === currentCameraId);
-        updateConnectionStatus(currentCameraId, cameraInfo?.online || false);
-        
-        // Update active camera display
-        const connectedCameraElement = document.getElementById('connectedCamera');
-        if (connectedCameraElement) {
-            connectedCameraElement.textContent = currentCameraId;
-        }
-        
-        // Restart stream with new camera
-        startStream();
-        
-        // Load new camera's state
-        fetchCameraState(currentCameraId);
-        
-        // Update safe areas for new camera
-        loadSafeAreasForCamera(currentCameraId);
-    };
-}
-
-function setupRegistrationUI() {
-    const registrationBtn = document.createElement('button');
-    registrationBtn.id = 'registrationBtn';
-    registrationBtn.innerHTML = 'Register New Camera';
-    registrationBtn.onclick = showRegistrationPopup;
-    
-    const cameraControls = document.getElementById('cameraControls');
-    if (cameraControls) {
-        cameraControls.appendChild(registrationBtn);
-    }
-}
-
 
 // ============================================
 // STREAM FUNCTIONS - SIMPLE AUTO-REFRESH
@@ -235,7 +81,7 @@ function updateConnectionStatus(cameraId, connected, ageSeconds = null) {
     if (cameraId === currentCameraId) {
         const statusText = connected ? 'Connected' : 'Disconnected';
         
-        statusIndicator.textContent = `${cameraId}: ${statusText}`;
+        statusIndicator.textContent = cameraId=`${cameraId}: ${statusText}`;
         
         // Remove all status classes and add the appropriate one
         statusIndicator.className = '';
@@ -433,10 +279,10 @@ function updateCameraSelect(cameras) {
     
     if (!cameras || cameras.length === 0) {
         const option = document.createElement('option');
-        option.value = "maixcam_001";
-        option.textContent = "Camera 1 (offline)";
+        option.value = "maixcam_000";
+        option.textContent = "Camera 0 (offline)";
         cameraSelect.appendChild(option);
-        cameraSelect.value = "maixcam_001";
+        cameraSelect.value = "maixcam_000";
         return;
     }
     
@@ -1108,18 +954,53 @@ function hideRegistrationPopup() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    const width = window.innerWidth; 
+    const height = window.innerHeight; 
+    const orientation = width > height ? 'Landscape' : 'Portrait'; 
+    const theme = getComputedStyle(document.documentElement).getPropertyValue('--theme-name').trim(); 
+    alert(`Screen: ${width}px × ${height}px\nOrientation: ${orientation}\nTheme: ${theme}`);
+    
     ANALYTICS_HTTP_URL = window.location.origin;
     console.log(`Connected to analytics server: ${ANALYTICS_HTTP_URL}`);
     
-    // Set up dynamic UI elements
-    setupDynamicUI();
+    // Get references to existing HTML elements
+    cameraSelect = document.getElementById('cameraSelect');
+    refreshCamerasBtn = document.getElementById('refreshCamerasBtn');
+    cameraInfoSpan = document.getElementById('camera-info');
+    statusIndicator = document.getElementById('stream-status');
+    
+    // Set up camera select event
+    cameraSelect.onchange = () => {
+        currentCameraId = cameraSelect.value;
+        console.log(`Switched to camera: ${currentCameraId}`);
+        
+        // Check connection status for this camera
+        const cameraInfo = availableCameras.find(cam => cam.camera_id === currentCameraId);
+        updateConnectionStatus(currentCameraId, cameraInfo?.online || false);
+        
+        // Update active camera display
+        const connectedCameraElement = document.getElementById('connectedCamera');
+        if (connectedCameraElement) {
+            connectedCameraElement.textContent = currentCameraId;
+        }
+        
+        // Restart stream with new camera
+        startStream();
+        
+        // Load new camera's state
+        fetchCameraState(currentCameraId);
+        
+        // Update safe areas for new camera
+        loadSafeAreasForCamera(currentCameraId);
+    };
+    
+    // Set up refresh button
+    if (refreshCamerasBtn) {
+        refreshCamerasBtn.onclick = loadCameraList;
+    }
     
     // Initialize stream
     startStream();
-    
-    // Set up Camera Registration UI
-    setupRegistrationUI();
-    setTimeout(loadPendingRegistrations, 2000);
     
     // Load initial data
     loadCameraList();
