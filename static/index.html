@@ -149,19 +149,43 @@
             const algorithmSelect = document.getElementById('fallAlgorithmSelect');
             const algorithmCards = document.querySelectorAll('.card');
             
-            // Show info panel
+            // Variable to store scroll position
+            let previousScrollPosition = 0;
+            
+            // Show info panel and scroll to bottom
             if (showBtn) {
                 showBtn.addEventListener('click', () => {
+                    // Store current scroll position
+                    previousScrollPosition = window.scrollY || document.documentElement.scrollTop;
+                    
+                    // Show panel
                     infoPanel.style.display = 'block';
                     showBtn.style.display = 'none';
+                    
+                    // Scroll to bottom of page
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: document.body.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }, 10);
                 });
             }
             
-            // Hide info panel
+            // Hide info panel and restore scroll position
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
+                    // Hide panel
                     infoPanel.style.display = 'none';
                     if (showBtn) showBtn.style.display = 'inline-block';
+                    
+                    // Restore previous scroll position
+                    setTimeout(() => {
+                        window.scrollTo({
+                            top: previousScrollPosition,
+                            behavior: 'smooth'
+                        });
+                    }, 10);
                 });
             }
             
