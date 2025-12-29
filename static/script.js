@@ -88,20 +88,76 @@ function updateConnectionStatus(cameraId, connected, ageSeconds = null) {
         ageSeconds: ageSeconds
     };
     
+    // Update main status indicator
     if (cameraId === currentCameraId) {
         const statusText = connected ? 'Connected' : 'Disconnected';
         
-        statusIndicator.textContent = `${currentCameraName}: ${statusText}`;
-        
-        statusIndicator.className = '';
-        if (connected) {
-            statusIndicator.classList.add('connected');
-        } else {
-            statusIndicator.classList.add('disconnected');
+        if (statusIndicator) {
+            statusIndicator.textContent = `${currentCameraName}: ${statusText}`;
+            statusIndicator.className = '';
+            if (connected) {
+                statusIndicator.classList.add('connected');
+            } else {
+                statusIndicator.classList.add('disconnected');
+            }
         }
         
         isConnected = connected;
         updateUIControls({});
+    }
+    
+    // Update camera info span with connected count
+    updateCameraInfoDisplay();
+    
+    // Update the camera dropdown to reflect current connection status
+    updateCameraDropdownStatus(cameraId, connected);
+}
+
+function updateCameraInfoDisplay() {
+    if (cameraInfoSpan) {
+        const connectedCameras = availableCameras.filter(cam => cameraConnectionStatus[cam.camera_id]?.connected);
+        const connectedCount = connectedCameras.length;
+        const totalCount = availableCameras.length;
+        
+        cameraInfoSpan.textContent = `${connectedCount}/${totalCount} camera(s) connected`;
+        cameraInfoSpan.style.color = connectedCount > 0 ? '#4CAF50' : '#ff4444';
+    }
+}
+
+function updateCameraDropdownStatus(cameraId, connected) {
+    if (!cameraSelect) return;
+    
+    // Find the option for this camera
+    for (let option of cameraSelect.options) {
+        if (option.value === cameraId) {
+            // Update the status symbol and color
+            const timeAgo = Math.round(cameraConnectionStatus[cameraId]?.ageSeconds || 0);
+            const status = connected ? '✓' : '✗';
+            const statusText = connected ? 'Connected' : 'Disconnected';
+            
+            // Extract the camera name (remove any existing status symbol)
+            const optionText = option.textContent;
+            const baseName = optionText.replace(/ [✓✗⚠️]$/, '');
+            option.textContent = `${baseName} ${status}`;
+            option.title = `${statusText}, ${timeAgo}s ago`;
+            option.style.color = connected ? '#4CAF50' : '#ff4444';
+            
+            // Also update the current camera name if it's selected
+            if (cameraId === currentCameraId) {
+                const cameraInfo = availableCameras.find(cam => cam.camera_id === cameraId);
+                if (cameraInfo) {
+                    currentCameraName = cameraInfo.camera_name || cameraInfo.camera_id;
+                }
+                
+                // Update connected camera display
+                const connectedCameraElement = document.getElementById('connectedCamera');
+                if (connectedCameraElement) {
+                    connectedCameraElement.textContent = currentCameraName;
+                }
+            }
+            
+            break;
+        }
     }
 }
 
@@ -196,17 +252,17 @@ async function loadCameraList() {
         if (response.ok) {
             const data = await response.json();
             availableCameras = data.cameras || [];
+            
+            // First update the dropdown with all cameras
             updateCameraSelect(availableCameras);
             
-            if (cameraInfoSpan) {
-                const connectedCount = data.connected_count || 0;
-                cameraInfoSpan.textContent = `${connectedCount}/${data.count} camera(s) connected`;
-                cameraInfoSpan.style.color = connectedCount > 0 ? '#4CAF50' : '#ff4444';
-            }
-            
+            // Then update connection status for each camera
             availableCameras.forEach(camera => {
                 updateConnectionStatus(camera.camera_id, camera.online, camera.age_seconds);
             });
+            
+            // Update the overall camera info display
+            updateCameraInfoDisplay();
             
         } else {
             throw new Error(`HTTP ${response.status}`);
@@ -411,6 +467,7 @@ async function fetchCameraState(cameraId) {
                 updateAlgorithmSelection(flags.fall_algorithm, false);
             }
             
+            // Update connection status from the response
             if (flags._connected !== undefined) {
                 updateConnectionStatus(cameraId, flags._connected);
             }
@@ -419,6 +476,8 @@ async function fetchCameraState(cameraId) {
         }
     } catch (error) {
         console.error(`Failed to fetch state for ${cameraId}:`, error);
+        // Update status as disconnected on error
+        updateConnectionStatus(cameraId, false);
     }
     return null;
 }
@@ -1220,7 +1279,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         cameraListTimer = setInterval(loadCameraList, 30000);
         cameraStateTimer = setInterval(() => fetchCameraState(currentCameraId), 10000);
-        cameraStatusTimer = setInterval(() => checkCameraConnection(currentCameraId), 5000);
+        cameraStatusTimer = setInterval(() => {
+            // Check connection for ALL cameras, not just current one
+            availableCameras.forEach(camera => {
+                checkCameraConnection(camera.camera_id);
+            });
+            // Also check current camera
+            if (currentCameraId) {
+                checkCameraConnection(currentCameraId);
+            }
+        }, 5000);
     }, 2000);
     
     window.addEventListener('beforeunload', stopStream);
