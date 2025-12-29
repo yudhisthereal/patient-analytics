@@ -55,7 +55,7 @@ def load_camera_registry():
                 logger.info(f"Loaded {len(camera_registry)} cameras from registry")
         else:
             camera_registry = {}
-            camera_counter = 0
+            camera_counter = 0  # Start from 0
             logger.info("No camera registry found, starting fresh")
     except Exception as e:
         logger.error(f"Error loading camera registry: {e}")
@@ -77,12 +77,12 @@ def save_camera_registry():
         logger.error(f"Error saving camera registry: {e}")
 
 def get_next_camera_id():
-    """Get next incremental camera ID"""
+    """Get next incremental camera ID in hexadecimal format"""
     global camera_counter
     camera_counter += 1
-    return f"camera_{camera_counter:03d}"
+    return f"camera_{camera_counter:04x}"
 
-def register_camera(ip_address, mac_address=None, camera_id=None):
+def register_camera(ip_address, camera_id=None):
     """Register a new camera and return registration data"""
     with registry_lock:
         # If camera_id is provided, check if it exists
@@ -92,7 +92,7 @@ def register_camera(ip_address, mac_address=None, camera_id=None):
             return {
                 "camera_id": camera_id,
                 "camera_name": camera_data.get("name", f"Camera {camera_id.split('_')[-1]}"),
-                "status": "already_registered"
+                "status": "registered"
             }
         
         # Check if camera with this IP already exists
@@ -102,31 +102,25 @@ def register_camera(ip_address, mac_address=None, camera_id=None):
                 return {
                     "camera_id": cam_id,
                     "camera_name": cam_data.get("name", f"Camera {cam_id.split('_')[-1]}"),
-                    "status": "already_registered"
+                    "status": "registered"
                 }
         
-        # If no camera_id provided, generate one from MAC or create new
+        # If no camera_id provided, generate new one
         if not camera_id:
-            if mac_address and mac_address != "unknown":
-                # Create camera_id from MAC (last 6 chars)
-                camera_id = f"camera_{mac_address[-6:].lower()}"
-            else:
-                # Generate new camera ID
-                camera_id = get_next_camera_id()
+            camera_id = get_next_camera_id()
         
         # Store as pending registration (by IP, not by temp ID!)
         pending_registrations[ip_address] = {
             "camera_id": camera_id,
-            "mac_address": mac_address,
             "timestamp": time.time(),
-            "status": "pending_approval"
+            "status": "pending"
         }
         
         logger.info(f"New camera registration pending from {ip_address}, camera ID: {camera_id}")
         
         return {
             "camera_id": camera_id,
-            "status": "pending_approval",
+            "status": "pending",
             "message": "Registration pending user approval"
         }
 
@@ -143,7 +137,6 @@ def approve_camera_registration(ip_address, camera_name):
         camera_registry[camera_id] = {
             "name": camera_name,
             "ip_address": ip_address,
-            "mac_address": pending_data.get("mac_address"),
             "first_seen": pending_data["timestamp"],
             "last_seen": time.time(),
             "approved_by": "user",
@@ -167,7 +160,7 @@ def approve_camera_registration(ip_address, camera_name):
         return {
             "camera_id": camera_id,
             "camera_name": camera_name,
-            "status": "already_registered"
+            "status": "registered"
         }
 
 def notify_camera_of_approval(camera_id, camera_name, camera_ip):
@@ -245,7 +238,6 @@ def get_pending_registrations():
                 {
                     "ip_address": ip_address,
                     "camera_id": data["camera_id"],
-                    "mac_address": data.get("mac_address"),
                     "timestamp": data["timestamp"],
                     "age_seconds": time.time() - data["timestamp"]
                 }
@@ -647,7 +639,6 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
         try:
             query_params = parse_qs(parsed_path.query)
             ip_address = self.client_address[0]
-            mac_address = query_params.get('mac', [None])[0]
             camera_id = query_params.get('camera_id', [None])[0]
             
             # Check if this camera is already registered
@@ -656,13 +647,13 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
                     response = {
                         "camera_id": cam_id,
                         "camera_name": cam_data.get("name", f"Camera {cam_id.split('_')[-1]}"),
-                        "status": "already_registered"
+                        "status": "registered"
                     }
                     self.send_json_response(200, response)
                     return
             
             # Register new camera
-            result = register_camera(ip_address, mac_address, camera_id)
+            result = register_camera(ip_address, camera_id)
             self.send_json_response(200, result)
             
         except Exception as e:

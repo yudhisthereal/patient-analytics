@@ -42,28 +42,6 @@
             <span id="camera-info" class="camera-info">Loading...</span>
         </div>
 
-        <!-- Status Panel -->
-        <!-- <div id="statusPanel" class="status-panel">
-            <div class="status-grid">
-                <div class="status-item">
-                    <strong>Server Status:</strong>
-                    <span id="serverStatus">Connecting...</span>
-                </div>
-                <div class="status-item">
-                    <strong>Camera Status:</strong>
-                    <span id="cameraStatus">Unknown</span>
-                </div>
-                <div class="status-item">
-                    <strong>Active Camera:</strong>
-                    <span id="connectedCamera">maixcam_000</span>
-                </div>
-                <div class="status-item">
-                    <strong>Last Frame:</strong>
-                    <span id="lastUpdate">Never</span>
-                </div>
-            </div>
-        </div> -->
-
         <!-- Control Panel -->
         <div class="control-panel">
             <div class="control-group">
@@ -171,14 +149,18 @@
         </div>
         <div id="registrationForm" style="display: none;">
             <h3>Approve Camera Registration</h3>
-            <p><strong>Camera IP:</strong> <span id="regCameraIP" style="color: var(--theme-primary);"></span></p>
+            <div class="camera-info-card" style="background: var(--theme-surface-light); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <p><strong>📡 Camera ID:</strong> <span id="regCameraID" style="color: var(--theme-primary); font-family: monospace; font-size: 1.1em;"></span></p>
+                <p><strong>📍 IP Address:</strong> <span id="regCameraIP" style="color: #4CAF50;"></span></p>
+                <p><strong>⏰ Status:</strong> <span style="color: #FF9800;">Pending Approval</span></p>
+            </div>
             <label for="cameraNameInput" style="display: block; margin: 15px 0 5px 0;">Camera Name:</label>
-            <input type="text" id="cameraNameInput" placeholder="Enter camera name" 
-                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--theme-border); background: var(--theme-surface-light); color: white;">
+            <input type="text" id="cameraNameInput" placeholder="Enter camera name (e.g., Living Room Camera)" 
+                style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--theme-primary); background: var(--theme-surface); color: white; font-size: 1em;">
             <div class="popup-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="approveRegistration()" style="flex: 2;">✅ Approve</button>
-                <button onclick="backToRegistrationList()" style="flex: 1;">← Back</button>
-                <button onclick="hideRegistrationPopup()" style="flex: 1; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">Cancel</button>
+                <button onclick="approveRegistration()" style="flex: 2; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);">Register</button>
+                <button onclick="backToRegistrationList()" style="flex: 1; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">← Back</button>
+                <button onclick="hideRegistrationPopup()" style="flex: 1; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">Cancel</button>
             </div>
         </div>
     </div>

@@ -1,5 +1,14 @@
 {
-  "cameras": {},
-  "counter": 2,
-  "last_updated": 1766984775.2069204
+  "cameras": {
+    "camera_0004": {
+      "name": "Please work part 2",
+      "ip_address": "117.103.69.63",
+      "first_seen": 1766997072.6671376,
+      "last_seen": 1766997089.9103842,
+      "approved_by": "user",
+      "approved_at": 1766997089.910385
+    }
+  },
+  "counter": 4,
+  "last_updated": 1766997089.9103885
 }

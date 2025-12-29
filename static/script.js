@@ -1022,7 +1022,6 @@ async function showRegistrationPopup() {
                 <div style="font-weight: bold; color: white; margin-bottom: 5px;">📷 Camera ID: ${reg.camera_id || 'Generating...'}</div>
                 <div style="font-size: 14px; color: #ccc; margin-bottom: 3px;">📍 IP: ${reg.ip_address}</div>
                 <div style="font-size: 13px; color: #aaa;">⏰ Waiting: ${ageMinutes} minute${ageMinutes !== 1 ? 's' : ''}</div>
-                ${reg.mac_address ? `<div style="font-size: 12px; color: #888;">🔑 MAC: ${reg.mac_address}</div>` : ''}
             `;
             
             listDiv.appendChild(regDiv);
