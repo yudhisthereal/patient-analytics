@@ -20,6 +20,7 @@
     --theme-border: rgba(74, 158, 255, 0.2);
     --theme-text: #f0f0f0;
     --theme-accent: #4a9eff;
+    --theme-primary-rgb: 74, 158, 255;
 }
 
 body {
@@ -90,14 +91,14 @@ h3 {
 }
 
 /* ==================== */
-/* Camera Controls - Second */
+/* Camera Controls - Second - IMPROVED COMPACT LAYOUT */
 /* ==================== */
 
 #cameraControls {
     order: 2;
     margin: 0 0 20px 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 15px;
     padding: 20px;
     background: var(--theme-surface);
@@ -106,9 +107,73 @@ h3 {
     backdrop-filter: blur(10px);
 }
 
-#cameraSelect {
+.camera-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    max-width: 100%;
+}
+
+.camera-label {
+    font-weight: 600;
+    color: var(--theme-primary);
+    white-space: nowrap;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+#cameraSelect {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+    background: var(--theme-surface);
+    color: white;
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#cameraSelect:hover, #cameraSelect:focus {
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.2);
+    outline: none;
+}
+
+#refreshCamerasBtn, #pendingRegistrationsBtn, #manageCamerasBtn {
+    white-space: nowrap;
+    min-width: 120px;
+    background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+}
+
+#refreshCamerasBtn:hover:not(:disabled),
+#pendingRegistrationsBtn:hover:not(:disabled),
+#manageCamerasBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--theme-primary-rgb), 0.4);
+}
+
+#pendingRegistrationsBtn {
+    background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+}
+
+#manageCamerasBtn {
+    background: linear-gradient(135deg, #6f42c1 0%, #9c27b0 100%);
 }
 
 #camera-info {
@@ -119,61 +184,15 @@ h3 {
     border-radius: 8px;
     border: 1px solid #444;
     text-align: center;
+    width: 100%;
 }
 
 /* ==================== */
-/* Control Panel - Third */
-/* ==================== */
-
-.control-panel {
-    order: 3;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
-    margin: 0 0 20px 0;
-    padding: 20px;
-    background: var(--theme-surface);
-    border-radius: 15px;
-    border: 1px solid var(--theme-border);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 15px;
-    background: var(--theme-surface-light);
-    border-radius: 10px;
-    border: 1px solid var(--theme-border);
-}
-
-.control-group label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-    font-size: clamp(0.9rem, 2vw, 1rem);
-    color: #cccccc;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.control-group label:hover {
-    background: rgba(var(--theme-primary-rgb), 0.1);
-    transform: translateY(-1px);
-}
-
-/* ==================== */
-/* Status Panel - Fourth */
+/* Status Panel - Third */
 /* ==================== */
 
 #statusPanel {
-    order: 4;
+    order: 3;
     margin: 0 0 20px 0;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -183,6 +202,10 @@ h3 {
     border-radius: 15px;
     border: 1px solid var(--theme-border);
     backdrop-filter: blur(10px);
+}
+
+#statusPanel .status-grid {
+    display: contents;
 }
 
 #statusPanel div {
@@ -206,6 +229,61 @@ h3 {
     font-family: 'Consolas', 'Monaco', monospace;
 }
 
+/* ==================== */
+/* Control Panel - Fourth - IMPROVED COMPACT LAYOUT */
+/* ==================== */
+
+.control-panel {
+    order: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 0 0 20px 0;
+    padding: 20px;
+    background: var(--theme-surface);
+    border-radius: 15px;
+    border: 1px solid var(--theme-border);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    padding: 15px;
+    background: var(--theme-surface-light);
+    border-radius: 10px;
+    border: 1px solid var(--theme-border);
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.control-item:hover {
+    background: rgba(var(--theme-primary-rgb), 0.1);
+    transform: translateY(-1px);
+}
+
+.control-item label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: clamp(0.9rem, 2vw, 1rem);
+    color: #cccccc;
+    cursor: pointer;
+    padding: 2px 0;
+}
+
 input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -216,14 +294,13 @@ input[type="checkbox"] {
 select {
     background: var(--theme-surface);
     color: white;
-    border: 1px solid #555;
+    border: 1px solid var(--theme-border);
     border-radius: 8px;
-    padding: 10px 15px;
+    padding: 8px 12px;
     font-size: clamp(0.9rem, 2vw, 1rem);
     cursor: pointer;
     transition: all 0.2s ease;
-    width: 100%;
-    max-width: 300px;
+    min-width: 180px;
 }
 
 select:hover, select:focus {
@@ -236,7 +313,7 @@ button {
     background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 10px 20px;
     font-size: clamp(0.9rem, 2vw, 1rem);
     border-radius: 8px;
     cursor: pointer;
@@ -246,7 +323,8 @@ button {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
+    min-height: 40px;
+    white-space: nowrap;
 }
 
 button:hover:not(:disabled) {
@@ -440,6 +518,16 @@ button:disabled {
     100% { opacity: 1; }
 }
 
+@keyframes pulse-orange {
+    0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+}
+
+#pendingRegistrationsBtn.pulse {
+    animation: pulse-orange 2s infinite;
+}
+
 /* ==================== */
 /* Popups               */
 /* ==================== */
@@ -543,6 +631,73 @@ button:disabled {
 }
 
 /* ==================== */
+/* Management Popup */
+/* ==================== */
+#managementPopup {
+    width: min(600px, 95vw);
+}
+
+.management-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 15px 0;
+    padding-right: 10px;
+}
+
+.camera-item {
+    background: var(--theme-surface-light);
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.camera-item:hover {
+    background: rgba(var(--theme-primary-rgb), 0.1);
+    transform: translateY(-1px);
+}
+
+.camera-info {
+    flex: 1;
+}
+
+.camera-name {
+    font-weight: bold;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.camera-details {
+    font-size: 14px;
+    color: #aaa;
+}
+
+.camera-details span {
+    display: block;
+    margin-bottom: 3px;
+}
+
+.forget-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.forget-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.4);
+}
+
+/* ==================== */
 /* Responsive Design with Portrait-Landscape Pairs */
 /* ==================== */
 
@@ -559,6 +714,7 @@ button:disabled {
         --theme-border: rgba(74, 158, 255, 0.2);
         --theme-text: #f0f0f0;
         --theme-accent: #4a9eff;
+        --theme-primary-rgb: 74, 158, 255;
     }
 }
 
@@ -576,6 +732,7 @@ button:disabled {
         --theme-border: rgba(46, 204, 113, 0.2);
         --theme-text: #e8f5e9;
         --theme-accent: #2ecc71;
+        --theme-primary-rgb: 46, 204, 113;
     }
 }
 
@@ -593,6 +750,7 @@ button:disabled {
         --theme-border: rgba(255, 152, 0, 0.2);
         --theme-text: #fff3e0;
         --theme-accent: #ff9800;
+        --theme-primary-rgb: 255, 152, 0;
     }
 }
 
@@ -611,6 +769,7 @@ button:disabled {
         --theme-border: rgba(233, 30, 99, 0.2);
         --theme-text: #fce4ec;
         --theme-accent: #e91e63;
+        --theme-primary-rgb: 233, 30, 99;
     }
     
     /* For your specific phone: 380px wide in portrait, 850px wide in landscape */
@@ -629,6 +788,7 @@ button:disabled {
                 --theme-border: rgba(233, 30, 99, 0.2);
                 --theme-text: #fce4ec;
                 --theme-accent: #e91e63;
+                --theme-primary-rgb: 233, 30, 99;
             }
         }
         
@@ -643,6 +803,7 @@ button:disabled {
                 --theme-border: rgba(255, 68, 68, 0.2);
                 --theme-text: #ffebee;
                 --theme-accent: #ff4444;
+                --theme-primary-rgb: 255, 68, 68;
             }
         }
         
@@ -657,6 +818,7 @@ button:disabled {
                 --theme-border: rgba(0, 188, 212, 0.2);
                 --theme-text: #e0f7fa;
                 --theme-accent: #00bcd4;
+                --theme-primary-rgb: 0, 188, 212;
             }
         }
     }
@@ -677,6 +839,7 @@ button:disabled {
                 --theme-border: rgba(233, 30, 99, 0.2);
                 --theme-text: #fce4ec;
                 --theme-accent: #e91e63;
+                --theme-primary-rgb: 233, 30, 99;
             }
         }
         
@@ -691,6 +854,7 @@ button:disabled {
                 --theme-border: rgba(255, 68, 68, 0.2);
                 --theme-text: #ffebee;
                 --theme-accent: #ff4444;
+                --theme-primary-rgb: 255, 68, 68;
             }
         }
         
@@ -705,6 +869,7 @@ button:disabled {
                 --theme-border: rgba(0, 188, 212, 0.2);
                 --theme-text: #e0f7fa;
                 --theme-accent: #00bcd4;
+                --theme-primary-rgb: 0, 188, 212;
             }
         }
     }
@@ -714,6 +879,32 @@ button:disabled {
         font-size: 0.9em;
         bottom: 15px;
         right: 15px;
+    }
+    
+    /* Mobile-specific adjustments for compact layout */
+    .camera-control-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    #cameraSelect, #refreshCamerasBtn, #pendingRegistrationsBtn, #manageCamerasBtn {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .control-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .control-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    select {
+        width: 100%;
+        max-width: 100%;
     }
 }
 
@@ -730,9 +921,14 @@ button:disabled {
     }
     
     .control-panel {
-        grid-template-columns: repeat(2, 1fr);
         gap: 10px;
         padding: 12px;
+    }
+    
+    .control-row {
+        flex-wrap: nowrap;
+        gap: 8px;
+        padding: 10px;
     }
     
     #stream {
@@ -748,9 +944,14 @@ button:disabled {
     }
     
     .control-panel {
-        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
         padding: 10px;
+    }
+    
+    .control-row {
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: 8px;
     }
     
     #stream {
@@ -778,6 +979,7 @@ button:disabled {
             --theme-border: rgba(233, 30, 99, 0.2);
             --theme-text: #fce4ec;
             --theme-accent: #e91e63;
+            --theme-primary-rgb: 233, 30, 99;
         }
     }
     
@@ -792,6 +994,7 @@ button:disabled {
             --theme-border: rgba(255, 68, 68, 0.2);
             --theme-text: #ffebee;
             --theme-accent: #ff4444;
+            --theme-primary-rgb: 255, 68, 68;
         }
     }
     
@@ -806,6 +1009,7 @@ button:disabled {
             --theme-border: rgba(0, 188, 212, 0.2);
             --theme-text: #e0f7fa;
             --theme-accent: #00bcd4;
+            --theme-primary-rgb: 0, 188, 212;
         }
     }
     
@@ -840,17 +1044,12 @@ button:disabled {
         padding: 15px;
         gap: 12px;
         margin-bottom: 15px;
-        grid-template-columns: 1fr;
     }
     
     #cameraControls, #statusPanel {
         margin-bottom: 15px;
         padding: 15px;
         gap: 10px;
-    }
-    
-    .control-group {
-        padding: 12px;
     }
 }
 
@@ -874,11 +1073,6 @@ button:disabled {
         padding: 12px;
         gap: 10px;
         margin-bottom: 12px;
-        grid-template-columns: 1fr;
-    }
-    
-    .control-group {
-        padding: 10px;
     }
     
     #cameraControls, #statusPanel {
@@ -904,7 +1098,7 @@ button:disabled {
         -moz-osx-font-smoothing: grayscale;
     }
     
-    .control-group label,
+    .control-item,
     button,
     select {
         border-width: 1.5px;

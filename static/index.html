@@ -19,16 +19,31 @@
 
         <!-- Camera Controls -->
         <div id="cameraControls" class="camera-controls">
-            <label class="camera-label">📷 Camera:</label>
-            <select id="cameraSelect">
-                <option value="maixcam_000">Camera 0</option>
-            </select>
-            <button id="refreshCamerasBtn">🔄 Refresh List</button>
+            <!-- Camera selection row -->
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                <label class="camera-label">📷 Camera:</label>
+                <select id="cameraSelect">
+                    <option value="maixcam_000">Camera 0</option>
+                </select>
+                <button id="refreshCamerasBtn">🔄 Refresh List</button>
+            </div>
+            
+
+            <!-- Registration and Management buttons -->
+            <div class="camera-control-row">
+                <button id="pendingRegistrationsBtn" style="display: none;">
+                    ⏳ Pending Registrations (<span id="pendingRegCount">0</span>)
+                </button>
+                <button id="manageCamerasBtn">
+                    📷 Manage Cameras
+                </button>
+            </div>
+            
             <span id="camera-info" class="camera-info">Loading...</span>
         </div>
 
         <!-- Status Panel -->
-        <div id="statusPanel" class="status-panel">
+        <!-- <div id="statusPanel" class="status-panel">
             <div class="status-grid">
                 <div class="status-item">
                     <strong>Server Status:</strong>
@@ -47,7 +62,7 @@
                     <span id="lastUpdate">Never</span>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Control Panel -->
         <div class="control-panel">
@@ -137,6 +152,35 @@
             <button onclick="hideSafeAreaPopup()">Cancel</button>
         </div>
         <div id="saveStatus" class="status"></div>
+    </div>
+
+    <!-- Camera Management Popup -->
+    <div id="managementPopup" class="popup" style="width: min(600px, 95vw);">
+        <div id="managementList" class="management-list">
+            <!-- List of registered cameras will be inserted here -->
+        </div>
+        <div class="popup-buttons" style="margin-top: 20px;">
+            <button onclick="hideManagementPopup()" style="width: 100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- Pending Registrations Popup -->
+    <div id="registrationPopup" class="popup" style="width: min(500px, 95vw);">
+        <div id="registrationList">
+            <!-- List of pending registrations will be inserted here -->
+        </div>
+        <div id="registrationForm" style="display: none;">
+            <h3>Approve Camera Registration</h3>
+            <p><strong>Camera IP:</strong> <span id="regCameraIP" style="color: var(--theme-primary);"></span></p>
+            <label for="cameraNameInput" style="display: block; margin: 15px 0 5px 0;">Camera Name:</label>
+            <input type="text" id="cameraNameInput" placeholder="Enter camera name" 
+                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--theme-border); background: var(--theme-surface-light); color: white;">
+            <div class="popup-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="approveRegistration()" style="flex: 2;">✅ Approve</button>
+                <button onclick="backToRegistrationList()" style="flex: 1;">← Back</button>
+                <button onclick="hideRegistrationPopup()" style="flex: 1; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
