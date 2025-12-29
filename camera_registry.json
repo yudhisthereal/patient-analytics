@@ -1,14 +1,15 @@
 {
   "cameras": {
-    "camera_0005": {
-      "name": "Please work #3",
+    "camera_0007": {
+      "name": "Camera 0007",
       "ip_address": "117.103.69.63",
-      "first_seen": 1766998026.3241646,
-      "last_seen": 1766998044.3007724,
+      "mac_address": null,
+      "first_seen": 1766999385.9146688,
+      "last_seen": 1766999395.7684076,
       "approved_by": "user",
-      "approved_at": 1766998044.3007731
+      "approved_at": 1766999395.7684083
     }
   },
-  "counter": 5,
-  "last_updated": 1766998044.3007784
+  "counter": 7,
+  "last_updated": 1766999395.7684155
 }

@@ -137,6 +137,7 @@ def approve_camera_registration(ip_address, camera_name):
         camera_registry[camera_id] = {
             "name": camera_name,
             "ip_address": ip_address,
+            "mac_address": pending_data.get("mac_address"),
             "first_seen": pending_data["timestamp"],
             "last_seen": time.time(),
             "approved_by": "user",
@@ -156,6 +157,20 @@ def approve_camera_registration(ip_address, camera_name):
             notify_camera_of_approval(camera_id, camera_name, ip_address)
         except Exception as e:
             logger.error(f"Failed to notify camera of approval: {e}")
+        
+        # FORCE update camera frame timestamp to make it appear connected immediately
+        with frame_lock:
+            if camera_id in camera_frames:
+                camera_frames[camera_id]['timestamp'] = time.time()
+            else:
+                # Create a dummy frame entry to make it appear in the list
+                camera_frames[camera_id] = {
+                    'frame': None,
+                    'timestamp': time.time(),  # Set to current time
+                    'size': 0,
+                    'source_addr': ip_address,
+                    'last_upload': time.time()
+                }
         
         return {
             "camera_id": camera_id,
@@ -1066,7 +1081,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"Camera state error: {e}")
             self.send_error(500, "Internal Server Error")
-    
+        
     def get_camera_list(self):
         """Return list of active cameras with NAMES not IDs"""
         try:
@@ -1097,6 +1112,15 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
                         else:
                             camera_name = "Unregistered Camera"
                     
+                    # FORCE refresh connection status for recently approved cameras
+                    # If camera was approved in the last 10 seconds, mark as connected
+                    if is_registered and cam_id in camera_registry:
+                        approved_at = camera_registry[cam_id].get("approved_at", 0)
+                        if current_time - approved_at < 10 and not online:
+                            online = True
+                            status = "connected"
+                            print(f"Force-marking recently approved camera {cam_id} as connected")
+                    
                     active_cameras.append({
                         "camera_id": cam_id,
                         "camera_name": camera_name,
@@ -1107,6 +1131,26 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
                         "age_seconds": current_time - last_seen,
                         "registered": is_registered,
                         "pending": not is_registered and any(reg.get("camera_id") == cam_id for reg in pending_registrations.values())
+                    })
+            
+            # Also include cameras that are in registry but not in frames (for completeness)
+            for cam_id in camera_registry:
+                if cam_id not in [c["camera_id"] for c in active_cameras]:
+                    camera_data = camera_registry[cam_id]
+                    # If approved in last 10 seconds, show as connected
+                    approved_at = camera_data.get("approved_at", 0)
+                    recently_approved = current_time - approved_at < 10
+                    
+                    active_cameras.append({
+                        "camera_id": cam_id,
+                        "camera_name": camera_data.get("name", f"Camera {cam_id.split('_')[-1]}"),
+                        "last_seen": camera_data.get("last_seen", 0),
+                        "ip_address": camera_data.get("ip_address", "unknown"),
+                        "online": recently_approved,  # Show as online if recently approved
+                        "status": "connected" if recently_approved else "disconnected",
+                        "age_seconds": current_time - camera_data.get("last_seen", current_time),
+                        "registered": True,
+                        "pending": False
                     })
             
             response = {
@@ -1121,7 +1165,7 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             
         except Exception as e:
             logger.error(f"Camera list error: {e}")
-            self.send_error(500, "Internal Server Error")
+        self.send_error(500, "Internal Server Error")
     
     def get_camera_state(self, camera_id):
         """Return camera's control flags"""

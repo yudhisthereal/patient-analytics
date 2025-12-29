@@ -252,17 +252,31 @@ async function loadCameraList() {
         if (response.ok) {
             const data = await response.json();
             availableCameras = data.cameras || [];
-            
-            // First update the dropdown with all cameras
             updateCameraSelect(availableCameras);
             
-            // Then update connection status for each camera
+            if (cameraInfoSpan) {
+                const connectedCount = data.connected_count || 0;
+                cameraInfoSpan.textContent = `${connectedCount}/${data.count} camera(s) connected`;
+                cameraInfoSpan.style.color = connectedCount > 0 ? '#4CAF50' : '#ff4444';
+            }
+            
+            // Update connection status for ALL cameras
             availableCameras.forEach(camera => {
                 updateConnectionStatus(camera.camera_id, camera.online, camera.age_seconds);
             });
             
-            // Update the overall camera info display
-            updateCameraInfoDisplay();
+            // FORCE refresh current camera connection status
+            if (currentCameraId) {
+                const cameraInfo = availableCameras.find(cam => cam.camera_id === currentCameraId);
+                if (cameraInfo) {
+                    updateConnectionStatus(currentCameraId, cameraInfo.online, cameraInfo.age_seconds);
+                    // Also refresh the camera state
+                    fetchCameraState(currentCameraId);
+                }
+            }
+            
+            // Update registration button status
+            updateRegistrationButton();
             
         } else {
             throw new Error(`HTTP ${response.status}`);
@@ -351,29 +365,35 @@ function updateCameraSelect(cameras) {
         cameraSelect.value = currentValue;
         currentCameraId = currentValue;
         const selectedCamera = cameras.find(cam => cam.camera_id === currentValue);
-        currentCameraName = selectedCamera.camera_name || selectedCamera.camera_id;
-        currentCameraStatus = selectedCamera.registered ? "registered" : "pending";
+        if (selectedCamera) {
+            currentCameraName = selectedCamera.camera_name || selectedCamera.camera_id;
+            currentCameraStatus = selectedCamera.registered ? "registered" : "pending";
+            updateConnectionStatus(currentCameraId, selectedCamera.online, selectedCamera.age_seconds);
+        }
     } else if (registeredCameras.length > 0) {
         // Select first registered camera
         cameraSelect.value = registeredCameras[0].camera_id;
         currentCameraId = registeredCameras[0].camera_id;
         currentCameraName = registeredCameras[0].camera_name || registeredCameras[0].camera_id;
         currentCameraStatus = "registered";
+        updateConnectionStatus(currentCameraId, registeredCameras[0].online, registeredCameras[0].age_seconds);
     } else if (unregisteredCameras.length > 0) {
         // Only show unregistered if no registered cameras
         cameraSelect.value = unregisteredCameras[0].camera_id;
         currentCameraId = unregisteredCameras[0].camera_id;
         currentCameraName = unregisteredCameras[0].camera_name;
         currentCameraStatus = "pending";
+        updateConnectionStatus(currentCameraId, unregisteredCameras[0].online, unregisteredCameras[0].age_seconds);
     }
     
     // Update registration status display
     updateRegistrationStatusDisplay();
     
-    // Update connection status
-    const selectedCamera = cameras.find(cam => cam.camera_id === currentCameraId);
-    if (selectedCamera) {
-        updateConnectionStatus(currentCameraId, selectedCamera.online, selectedCamera.age_seconds);
+    // Trigger stream refresh if we have a valid camera
+    if (currentCameraId && currentCameraId !== "camera_000") {
+        console.log(`Switching to camera: ${currentCameraId} after list update`);
+        startStream();
+        fetchCameraState(currentCameraId);
     }
 }
 
@@ -1151,8 +1171,36 @@ async function approveRegistration() {
             pendingRegistrations = pendingRegistrations.filter(reg => reg.camera_id !== selectedCameraId);
             updateRegistrationButton();
             
-            // Reload camera list to show newly registered camera
+            // IMMEDIATELY refresh camera list after approval
+            console.log(`Camera approved: ${cameraName}. Refreshing camera list...`);
+            
+            // Force refresh of all data
+            await loadPendingRegistrations();
             await loadCameraList();
+            
+            // Switch to the newly approved camera
+            if (availableCameras.some(cam => cam.camera_id === selectedCameraId && cam.registered)) {
+                cameraSelect.value = selectedCameraId;
+                currentCameraId = selectedCameraId;
+                currentCameraName = cameraName;
+                
+                console.log(`Switching to newly approved camera: ${cameraName}`);
+                
+                // Update UI
+                const connectedCameraElement = document.getElementById('connectedCamera');
+                if (connectedCameraElement) {
+                    connectedCameraElement.textContent = currentCameraName;
+                }
+                
+                // Update registration status
+                currentCameraStatus = "registered";
+                updateRegistrationStatusDisplay();
+                
+                // Force status refresh and stream restart
+                await checkCameraConnection(currentCameraId);
+                await fetchCameraState(currentCameraId);
+                startStream();
+            }
             
             hideRegistrationPopup();
             
@@ -1250,7 +1298,24 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Set up refresh button
-    refreshCamerasBtn.onclick = loadCameraList;
+    refreshCamerasBtn.onclick = async () => {
+        console.log("Manually refreshing camera list and status...");
+        
+        // Force immediate refresh of all data
+        await loadPendingRegistrations();
+        await loadCameraList();
+        
+        // Force status check for current camera
+        if (currentCameraId) {
+            await checkCameraConnection(currentCameraId);
+            await fetchCameraState(currentCameraId);
+        }
+        
+        // Restart stream with fresh data
+        startStream();
+        
+        console.log("Manual refresh completed");
+    };
 
     // Set up pending registration button
     pendingRegBtn.onclick = showRegistrationPopup;
