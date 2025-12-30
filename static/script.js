@@ -271,8 +271,6 @@ async function loadCameraList() {
                 const cameraInfo = availableCameras.find(cam => cam.camera_id === currentCameraId);
                 if (cameraInfo) {
                     updateConnectionStatus(currentCameraId, cameraInfo.online, cameraInfo.age_seconds);
-                    // Also refresh the camera state
-                    fetchCameraState(currentCameraId);
                 }
             }
             
@@ -411,8 +409,6 @@ function updateCameraSelect(cameras) {
         fetchCameraState(newCameraId);
     } else if (newCameraId && newCameraId !== "camera_000") {
         console.log(`Camera unchanged (${newCameraId}). Not restarting stream.`);
-        // Still update camera state even if stream is already running
-        fetchCameraState(newCameraId);
     }
 }
 
@@ -600,7 +596,6 @@ function sendCommand(command, value = null) {
     .then(response => {
         if (response.ok) {
             console.log(`Command sent successfully`);
-            setTimeout(() => fetchCameraState(currentCameraId), 300);
         } else {
             console.error(`Command failed: HTTP ${response.status}`);
             updateConnectionStatus(currentCameraId, false);
@@ -1373,7 +1368,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
         cameraListTimer = setInterval(loadCameraList, 30000);
-        cameraStateTimer = setInterval(() => fetchCameraState(currentCameraId), 10000);
         cameraStatusTimer = setInterval(() => {
             // Check connection for ALL cameras, not just current one
             availableCameras.forEach(camera => {

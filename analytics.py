@@ -1024,20 +1024,28 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             # Update control flag
             if command == "toggle_record":
                 self.analytics.camera_states[camera_id]["control_flags"]["record"] = bool(value)
+                logger.info(f"SETTING RECORDING: {value}")
             elif command == "toggle_raw":
                 self.analytics.camera_states[camera_id]["control_flags"]["show_raw"] = bool(value)
+                logger.info(f"SETTING SHOW RAW: {value}")
             elif command == "auto_update_bg":
                 self.analytics.camera_states[camera_id]["control_flags"]["auto_update_bg"] = bool(value)
+                logger.info(f"SETTING AUTO BACKGROUND: {value}")
             elif command == "set_background":
                 self.analytics.camera_states[camera_id]["control_flags"]["set_background"] = bool(value)
+                logger.info(f"SETTING BACKGROUND: {value}")
             elif command == "toggle_safe_area_display":
                 self.analytics.camera_states[camera_id]["control_flags"]["show_safe_area"] = bool(value)
+                logger.info(f"SETTING SHOW AREA: {value}")
             elif command == "toggle_safety_check":
                 self.analytics.camera_states[camera_id]["control_flags"]["use_safety_check"] = bool(value)
+                logger.info(f"SETTING USE SAFETY: {value}")
             elif command == "toggle_hme":
                 self.analytics.camera_states[camera_id]["control_flags"]["hme"] = bool(value)
-            elif command == "toggle_analytics_mode":
-                self.analytics.camera_states[camera_id]["control_flags"]["analytics_mode"] = bool(value)
+                logger.info(f"SETTING HME MODE: {value}")
+            # elif command == "toggle_analytics_mode":
+            #     self.analytics.camera_states[camera_id]["control_flags"]["analytics_mode"] = bool(value)
+            #     logger.info(f"SETTING ANALYTICS MODE: {value}")
             elif command == "set_fall_algorithm":
                 algorithm = int(value) if isinstance(value, (int, float)) else 3
                 if algorithm in [1, 2, 3]:
@@ -1065,9 +1073,9 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"Command error: {e}")
             self.send_error(500, "Internal Server Error")
-    
+        
     def handle_camera_state_update(self, body):
-        """Handle camera state updates from MaixCAM"""
+        """Handle camera state updates from MaixCAM - IGNORE control_flags from camera"""
         try:
             state = json.loads(body.decode())
             camera_id = state.get("camera_id")
@@ -1080,17 +1088,26 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             if camera_id not in self.analytics.camera_states:
                 self.analytics.camera_states[camera_id] = {}
             
-            # Update state
-            self.analytics.camera_states[camera_id].update({
-                "control_flags": state.get("control_flags", {}),
-                "safe_areas": state.get("safe_areas", []),
-                "ip_address": state.get("ip_address"),
+            # Update ONLY non-control-flag fields
+            # DO NOT update control_flags from camera - they are managed by web UI only
+            camera_state = self.analytics.camera_states[camera_id]
+            
+            # Keep existing control_flags (from web UI)
+            current_control_flags = camera_state.get("control_flags", {})
+            
+            # Update other fields from camera
+            camera_state.update({
+                # Preserve control_flags from web UI
+                "control_flags": current_control_flags,
+                # Update safe areas from camera (if provided)
+                "safe_areas": state.get("safe_areas", camera_state.get("safe_areas", [])),
+                "ip_address": state.get("ip_address", camera_state.get("ip_address")),
                 "last_seen": time.time(),
                 "last_report": time.time(),
                 "connected": True
             })
             
-            logger.debug(f"Updated state for camera {camera_id}")
+            logger.debug(f"Updated state for camera {camera_id} (control_flags preserved from web UI)")
             self.send_response(200)
             self.end_headers()
             
