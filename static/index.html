@@ -25,16 +25,16 @@
                 <select id="cameraSelect">
                     <option value="maixcam_000">Camera 0</option>
                 </select>
-                <button id="refreshCamerasBtn">🔄 Refresh List</button>
+                <button id="refreshCamerasBtn" class="btn btn-primary">🔄 Refresh List</button>
             </div>
             
 
             <!-- Registration and Management buttons -->
             <div class="camera-control-row">
-                <button id="pendingRegistrationsBtn" style="display: none;">
+                <button id="pendingRegistrationsBtn" class="btn btn-warning" style="display: none;">
                     ⏳ Pending Registrations (<span id="pendingRegCount">0</span>)
                 </button>
-                <button id="manageCamerasBtn">
+                <button id="manageCamerasBtn" class="btn btn-secondary">
                     📷 Manage Cameras
                 </button>
             </div>
@@ -45,13 +45,21 @@
         <!-- Control Panel -->
         <div class="control-panel">
             <div class="control-group">
-                <label><input type="checkbox" id="toggleRecord"> Record</label>
-                <label><input type="checkbox" id="toggleRaw"> Show Raw</label>
-                <label><input type="checkbox" id="autoUpdateBg"> Auto-update BG</label>
+                <input type="checkbox" id="toggleRecord">
+                <label for="toggleRecord" class="toggle-label">Record</label>
+                
+                <input type="checkbox" id="toggleRaw">
+                <label for="toggleRaw" class="toggle-label">Show Raw</label>
+                
+                <input type="checkbox" id="autoUpdateBg">
+                <label for="autoUpdateBg" class="toggle-label">Auto-update BG</label>
             </div>
             <div class="control-group">
-                <label><input type="checkbox" id="showSafeArea"> Show Safe Areas</label>
-                <label><input type="checkbox" id="useSafetyCheck" checked> Use Safety Check</label>
+                <input type="checkbox" id="showSafeArea">
+                <label for="showSafeArea" class="toggle-label">Show Safe Areas</label>
+                
+                <input type="checkbox" id="useSafetyCheck" checked>
+                <label for="useSafetyCheck" class="toggle-label">Use Safety Check</label>
             </div>
             <div class="control-group">
                 <label>Fall Algorithm:
@@ -61,8 +69,8 @@
                         <option value="3">Method 3: Conservative</option>
                     </select>
                 </label>
-                <button id="setBackgroundBtn" title="Set current frame as background">📸 Set BG</button>
-                <button id="editSafeAreaBtn" title="Edit safety zones">🛡️ Safe Areas</button>
+                <button id="setBackgroundBtn" class="btn btn-primary" title="Set current frame as background">📸 Set BG</button>
+                <button id="editSafeAreaBtn" class="btn btn-secondary" title="Edit safety zones">🛡️ Safe Areas</button>
             </div>
         </div>
 
@@ -86,13 +94,13 @@
                     <div class="stats">Speed: ⚡⚡⚡○○ | Accuracy: ⚡⚡⚡⚡⚡</div>
                 </div>
             </div>
-            <button id="closeInfoBtn" class="info-btn">✕ Close</button>
+            <button id="closeInfoBtn" class="btn btn-secondary">✕ Close</button>
         </div>
         
     </div> <!-- End of .main-container -->
     
     <!-- Floating button for algorithm info -->
-    <button id="showInfoBtn" class="info-btn">ℹ️ Algorithm Info</button>
+    <button id="showInfoBtn" class="btn btn-floating">ℹ️ Algorithm Info</button>
 
     <!-- Status Indicator -->
     <div id="stream-status" class="status-indicator">
@@ -104,8 +112,8 @@
         <h3>Set this frame as background?</h3>
         <img id="preview" src="">
         <br />
-        <button onclick="confirmBackground()">Yes</button>
-        <button onclick="hidePopup()">Cancel</button>
+        <button onclick="confirmBackground()" class="btn btn-primary">Yes</button>
+        <button onclick="hidePopup()" class="btn btn-secondary">Cancel</button>
     </div>
 
     <!-- Safe Area Editor Popup -->
@@ -124,10 +132,10 @@
             <canvas id="safeAreaCanvas"></canvas>
         </div>
         <div class="toolbar">
-            <button id="newPolygonBtn">New Polygon</button>
-            <button id="clearAllBtn">Clear All</button>
-            <button id="saveSafeAreasBtn">💾 Save</button>
-            <button onclick="hideSafeAreaPopup()">Cancel</button>
+            <button id="newPolygonBtn" class="btn btn-primary">New Polygon</button>
+            <button id="clearAllBtn" class="btn btn-warning">Clear All</button>
+            <button id="saveSafeAreasBtn" class="btn btn-success">💾 Save</button>
+            <button onclick="hideSafeAreaPopup()" class="btn btn-secondary">Cancel</button>
         </div>
         <div id="saveStatus" class="status"></div>
     </div>
@@ -138,7 +146,7 @@
             <!-- List of registered cameras will be inserted here -->
         </div>
         <div class="popup-buttons" style="margin-top: 20px;">
-            <button onclick="hideManagementPopup()" style="width: 100%;">Close</button>
+            <button onclick="hideManagementPopup()" class="btn btn-secondary" style="width: 100%;">Close</button>
         </div>
     </div>
 
@@ -158,9 +166,9 @@
             <input type="text" id="cameraNameInput" placeholder="Enter camera name (e.g., Living Room Camera)" 
                 style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--theme-primary); background: var(--theme-surface); color: white; font-size: 1em;">
             <div class="popup-buttons" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="approveRegistration()" style="flex: 2; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);">Register</button>
-                <button onclick="backToRegistrationList()" style="flex: 1; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">← Back</button>
-                <button onclick="hideRegistrationPopup()" style="flex: 1; background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">Cancel</button>
+                <button onclick="approveRegistration()" class="btn btn-success" style="flex: 2;">Register</button>
+                <button onclick="backToRegistrationList()" class="btn btn-secondary" style="flex: 1;">← Back</button>
+                <button onclick="hideRegistrationPopup()" class="btn btn-danger" style="flex: 1;">Cancel</button>
             </div>
         </div>
     </div>

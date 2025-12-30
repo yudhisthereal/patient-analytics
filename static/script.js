@@ -294,6 +294,9 @@ function updateCameraSelect(cameras) {
     if (!cameraSelect) return;
     
     const currentValue = cameraSelect.value;
+    const previousCameraId = currentCameraId; // Store previous camera ID
+    
+    console.log(`Updating camera list. Previous camera: ${previousCameraId}, Current selection: ${currentValue}`);
     
     cameraSelect.innerHTML = '<option value="" disabled>Select a camera</option>';
     
@@ -303,6 +306,14 @@ function updateCameraSelect(cameras) {
         option.textContent = "No cameras available";
         cameraSelect.appendChild(option);
         cameraSelect.value = "camera_000";
+        
+        // If we had a camera before but now none exist
+        if (previousCameraId && previousCameraId !== "camera_000") {
+            console.log(`No cameras available now, was on ${previousCameraId}. Stopping stream.`);
+            currentCameraId = "camera_000";
+            currentCameraName = "No Camera";
+            stopStream();
+        }
         return;
     }
     
@@ -360,40 +371,47 @@ function updateCameraSelect(cameras) {
         cameraSelect.appendChild(group);
     }
     
-    // Try to preserve current selection
+    // Determine new camera ID
+    let newCameraId = currentValue;
+    let selectedCamera = null;
+    
     if (currentValue && cameras.some(cam => cam.camera_id === currentValue)) {
+        // Keep the same camera selected
         cameraSelect.value = currentValue;
-        currentCameraId = currentValue;
-        const selectedCamera = cameras.find(cam => cam.camera_id === currentValue);
-        if (selectedCamera) {
-            currentCameraName = selectedCamera.camera_name || selectedCamera.camera_id;
-            currentCameraStatus = selectedCamera.registered ? "registered" : "pending";
-            updateConnectionStatus(currentCameraId, selectedCamera.online, selectedCamera.age_seconds);
-        }
+        newCameraId = currentValue;
+        selectedCamera = cameras.find(cam => cam.camera_id === currentValue);
     } else if (registeredCameras.length > 0) {
         // Select first registered camera
         cameraSelect.value = registeredCameras[0].camera_id;
-        currentCameraId = registeredCameras[0].camera_id;
-        currentCameraName = registeredCameras[0].camera_name || registeredCameras[0].camera_id;
-        currentCameraStatus = "registered";
-        updateConnectionStatus(currentCameraId, registeredCameras[0].online, registeredCameras[0].age_seconds);
+        newCameraId = registeredCameras[0].camera_id;
+        selectedCamera = registeredCameras[0];
     } else if (unregisteredCameras.length > 0) {
         // Only show unregistered if no registered cameras
         cameraSelect.value = unregisteredCameras[0].camera_id;
-        currentCameraId = unregisteredCameras[0].camera_id;
-        currentCameraName = unregisteredCameras[0].camera_name;
-        currentCameraStatus = "pending";
-        updateConnectionStatus(currentCameraId, unregisteredCameras[0].online, unregisteredCameras[0].age_seconds);
+        newCameraId = unregisteredCameras[0].camera_id;
+        selectedCamera = unregisteredCameras[0];
+    }
+    
+    // Update camera info
+    if (selectedCamera) {
+        currentCameraId = newCameraId;
+        currentCameraName = selectedCamera.camera_name || selectedCamera.camera_id;
+        currentCameraStatus = selectedCamera.registered ? "registered" : "pending";
+        updateConnectionStatus(currentCameraId, selectedCamera.online, selectedCamera.age_seconds);
     }
     
     // Update registration status display
     updateRegistrationStatusDisplay();
     
-    // Trigger stream refresh if we have a valid camera
-    if (currentCameraId && currentCameraId !== "camera_000") {
-        console.log(`Switching to camera: ${currentCameraId} after list update`);
+    // Only start stream if camera actually changed
+    if (previousCameraId !== newCameraId && newCameraId && newCameraId !== "camera_000") {
+        console.log(`Camera changed from ${previousCameraId} to ${newCameraId}. Starting stream.`);
         startStream();
-        fetchCameraState(currentCameraId);
+        fetchCameraState(newCameraId);
+    } else if (newCameraId && newCameraId !== "camera_000") {
+        console.log(`Camera unchanged (${newCameraId}). Not restarting stream.`);
+        // Still update camera state even if stream is already running
+        fetchCameraState(newCameraId);
     }
 }
 
