@@ -5,4 +5,3 @@ analytics-env
 # Server code files - removed from source control
 analytics.py
 static/
-pose/
