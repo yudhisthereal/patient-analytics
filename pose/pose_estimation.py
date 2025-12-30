@@ -41,7 +41,7 @@ invnw = 44855536902472009823152313099539628632
 class PoseEstimation:
     """Pose classifier with optional Homomorphic Encryption support"""
     
-    def __init__(self, keypoints_window_size=5, missing_value=-1, hme_mode=False):
+    def __init__(self, keypoints_window_size=5, missing_value=-1, use_hme=False):
         self.keypoints_map_deque = deque(maxlen=keypoints_window_size)
         self.status = []
         self.pose_data = {}  # Store detailed pose data
@@ -52,7 +52,7 @@ class PoseEstimation:
         self.torso_leg_ratio_threshold = 0.5
         
         # HME mode flag
-        self.use_hme = hme_mode
+        self.use_hme = use_hme
         
         if self.use_hme:
             print("[HME] Homomorphic Encryption mode ENABLED")

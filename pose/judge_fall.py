@@ -7,7 +7,7 @@ counter_bbox_only = 0        # Algorithm 1: BBox motion only
 counter_motion_pose_and = 0  # Algorithm 2: BBox motion AND strict pose
 # Algorithm 3 uses the other two counters
 
-def get_fall_info(online_targets_det, online_targets, index, fallParam, queue_size, fps, pose_data=None, hme_mode=False):
+def get_fall_info(online_targets_det, online_targets, index, fallParam, queue_size, fps, pose_data=None, use_hme=False):
     global counter_bbox_only, counter_motion_pose_and
 
     fall_detected_bbox_only = False      # Algorithm 1
@@ -15,7 +15,7 @@ def get_fall_info(online_targets_det, online_targets, index, fallParam, queue_si
     fall_detected_flexible = False       # Algorithm 3
 
     # Handle HME mode differently
-    if hme_mode:
+    if use_hme:
         # In HME mode, we might have limited pose information
         # We'll use the label if available, but angles might not be precise
         if pose_data and isinstance(pose_data, dict):
@@ -71,7 +71,7 @@ def get_fall_info(online_targets_det, online_targets, index, fallParam, queue_si
 
     print(f"[DEBUG] v_top = {v_top:.6f}, v_height = {v_height:.6f}, threshold = {fallParam['v_bbox_y']}")
 
-    if hme_mode:
+    if use_hme:
         # HME mode: use approximate values
         torso_angle = torso_angle_approx
         thigh_uprightness = thigh_uprightness_approx
@@ -93,7 +93,7 @@ def get_fall_info(online_targets_det, online_targets, index, fallParam, queue_si
     strict_pose_condition = False
     flexible_pose_condition = False
     
-    if hme_mode:
+    if use_hme:
         # In HME mode, we rely more on the pose classification label
         # and approximate angle values
         if label == "lying_down":

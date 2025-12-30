@@ -381,7 +381,7 @@ track_history_lock = threading.Lock()
 
 # Pose estimator (same as MaixCAM)
 # Initialize pose estimator with default HME mode (can be updated per camera)
-pose_estimator = PoseEstimation(hme_mode=False)
+pose_estimator = PoseEstimation(use_hme=False)
 
 # Fall detection parameters (same as MaixCAM)
 fallParam = {
@@ -1274,14 +1274,14 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
             upload_data = data.get("data", {})
             
             if data_type == "skeletal_data":
-                hme_mode = upload_data.get("hme_mode", False)
+                use_hme = upload_data.get("use_hme", False)
                 
                 # Check camera state's hme control flag
                 camera_state = self.analytics.camera_states.get(camera_id, {})
                 control_flags = camera_state.get("control_flags", {})
                 hme_enabled = control_flags.get("hme", False)
                 
-                if hme_mode and hme_enabled:
+                if use_hme and hme_enabled:
                     encrypted_features = upload_data.get("encrypted_features", {})
                     comparison_results = pose_estimator.perform_hme_comparisons(encrypted_features)
                     
@@ -1302,7 +1302,8 @@ class AnalyticsHTTPHandler(BaseHTTPRequestHandler):
                             upload_data["keypoints"],
                             upload_data["bbox"],
                             track_id,
-                            camera_id
+                            camera_id,
+                            self.analytics
                         )
                         upload_data["server_analysis"] = pose_data
                 
