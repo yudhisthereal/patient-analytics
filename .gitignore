@@ -1,3 +1,8 @@
 __pycache__
 analytics-env
 .env
+
+# Server code files - removed from source control
+analytics.py
+static/
+pose/
